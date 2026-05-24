@@ -80,8 +80,8 @@ To host any required backend services:
 
 ## The Team
 
-- **Sarah Jenkins** — Product Designer & Immigrant Experience Researcher
-- **Marcus Chen** — Full Stack AI Engineer & Integrations
-- **Amina Diop** — Cloud Solutions & Compliance Rules Architect
+- **Rudrax Prajapati** — MSc. Computational Science Student @ Laurentian University
+- **Daivanshika Patel** — MSc. Computational Science @ Laurentian University
+- **Omkumar Patel** — MSc. Computational Science @ Laurentian University
 
 *Note: This project was built for the **Scale Hackathon** and submitted on **Devpost**.*
