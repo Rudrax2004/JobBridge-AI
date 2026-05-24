@@ -1,0 +1,74 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. Global Default-Deny Catch-All
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isEmployerOfJob(jobId) {
+      return isSignedIn() && 
+        exists(/databases/$(database)/documents/jobs/$(jobId)) &&
+        get(/databases/$(database)/documents/jobs/$(jobId)).data.employerUid == request.auth.uid;
+    }
+
+    function isValidId(id) {
+       return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // 2. Users Collection
+    match /users/{userId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn() && (resource.data.role == 'seeker' || resource.data.uid == request.auth.uid);
+      allow create, update: if isOwner(userId);
+      allow delete: if false;
+    }
+
+    // 3. Jobs Collection
+    match /jobs/{jobId} {
+      // Jobs are public for browsing
+      allow read: if true;
+      allow create: if isSignedIn() && request.resource.data.employerUid == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.employerUid == request.auth.uid;
+    }
+
+    // 4. Candidate Aptitude Results
+    match /candidates/{candidateUid}/aptitudeResults/{jobId} {
+      allow read: if isSignedIn() && (request.auth.uid == candidateUid || isEmployerOfJob(jobId));
+      allow write: if isOwner(candidateUid);
+    }
+
+    // 5. Candidate Interview Results
+    match /candidates/{candidateUid}/interviewResults/{jobId} {
+      allow read: if isSignedIn() && (request.auth.uid == candidateUid || isEmployerOfJob(jobId));
+      allow write: if isOwner(candidateUid);
+    }
+
+    // 6. HR Scheduled Rounds (Flat path)
+    match /hrRounds/{key} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
+    }
+
+    // 7. HR Scheduled subcollections
+    match /hrRounds/{jobId}/uid/{candidateUid} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
+    }
+
+    match /hrRounds/{jobId}/scheduled/{candidateUid} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
+    }
+  }
+}

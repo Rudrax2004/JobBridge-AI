@@ -1,0 +1,6 @@
+{
+  "name": "JobBridge AI",
+  "description": "An AI-powered job platform for Canadian immigrants that helps identify legitimate remote job opportunities.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,136 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Represents a registered JobBridge AI user, either an employer or a job seeker.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The unique user authentication ID." },
+        "email": { "type": "string", "format": "email", "description": "The email address of the user." },
+        "displayName": { "type": "string", "description": "Human-readable profile display name." },
+        "role": { "type": "string", "enum": ["seeker", "employer"], "description": "Role of the user." },
+        "onboardingCompleted": { "type": "boolean", "description": "Flag showing if onboarding flow is finished." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "ISO time when the account was set up." },
+        "background": {
+          "type": "object",
+          "description": "Onboarding details specific to job seeker background (Canadian status, experience, country of origin)."
+        },
+        "aiExtracted": {
+          "type": "object",
+          "description": "AI-derived summary of candidate skills extracted via resume parser."
+        },
+        "nocAnalysis": {
+          "type": "object",
+          "description": "AI recommendation of potential NOC classifications."
+        },
+        "company": {
+          "type": "object",
+          "description": "Details regarding user's business organization (only for employers)."
+        }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Job": {
+      "title": "Job",
+      "description": "A remote or hybrid job opportunity verified and posted by an Employer.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Job designation title." },
+        "company": { "type": "string", "description": "Corporate employer organization name." },
+        "description": { "type": "string", "description": "Comprehensive job requirements details." },
+        "salaryMin": { "type": "number", "description": "Minimum annual compensation value." },
+        "salaryMax": { "type": "number", "description": "Maximum annual compensation value." },
+        "salary": { "type": "string", "description": "Formatted salary range text." },
+        "province": { "type": "string", "description": "Canadian province or location." },
+        "sector": { "type": "string", "description": "Business market sector category." },
+        "workType": { "type": "string", "enum": ["Remote", "Hybrid", "Onsite"], "description": "Remote arrangement model." },
+        "jobType": { "type": "string", "enum": ["Full-time", "Part-time", "Internship", "Student"], "description": "Job arrangement terms." },
+        "nocCode": { "type": "string", "description": "Target NOC Code." },
+        "teerLevel": { "type": "number", "description": "National Occupational TEER code level (0-5)." },
+        "experienceYears": { "type": "number", "description": "Required years of professional experience." },
+        "legitimacyScore": { "type": "number", "description": "AI regulatory Trust score from 0 to 10." },
+        "verdict": { "type": "string", "enum": ["Verified", "Suspicious", "Rejected"], "description": "Security vetting outcome verdict." },
+        "flags": { "type": "array", "description": "Warning flags triggered during scam analysis." },
+        "summary": { "type": "string", "description": "Generative security summary output of the listing." },
+        "employerUid": { "type": "string", "description": "The UID of the creator Employer." },
+        "applicantCount": { "type": "number", "description": "Current number of candidate applications." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Date of creation in ISO 8601." }
+      },
+      "required": ["title", "company", "description", "salaryMin", "salaryMax", "employerUid", "legitimacyScore", "verdict"]
+    },
+    "AptitudeResult": {
+      "title": "AptitudeResult",
+      "description": "Record of a seeker's aptitude quiz scores for a targeted job.",
+      "type": "object",
+      "properties": {
+        "score": { "type": "number" },
+        "passed": { "type": "boolean" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "jobId": { "type": "string" },
+        "correctCount": { "type": "number" },
+        "totalCount": { "type": "number" }
+      },
+      "required": ["score", "passed", "jobId"]
+    },
+    "InterviewResult": {
+      "title": "InterviewResult",
+      "description": "Output report from candidate's AI structured video interview questions.",
+      "type": "object",
+      "properties": {
+        "questions": { "type": "array" },
+        "scores": { "type": "array" },
+        "averageScore": { "type": "number" },
+        "passed": { "type": "boolean" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "details": { "type": "array" }
+      },
+      "required": ["averageScore", "passed"]
+    },
+    "HRRound": {
+      "title": "HRRound",
+      "description": "Scheduled recruitment interview details with video/chat join parameters.",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string" },
+        "time": { "type": "string" },
+        "videoLink": { "type": "string", "format": "uri" },
+        "jobId": { "type": "string" },
+        "uid": { "type": "string" },
+        "candidateName": { "type": "string" },
+        "title": { "type": "string" },
+        "scheduledAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["date", "time", "videoLink", "jobId", "uid"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "Stores user authentication profiles."
+    },
+    "jobs/{jobId}": {
+      "schema": { "$ref": "#/entities/Job" },
+      "description": "Active remote positions posted on JobBridge AI."
+    },
+    "candidates/{candidateUid}/aptitudeResults/{jobId}": {
+      "schema": { "$ref": "#/entities/AptitudeResult" },
+      "description": "Holds the testing values of an apprentice."
+    },
+    "candidates/{candidateUid}/interviewResults/{jobId}": {
+      "schema": { "$ref": "#/entities/InterviewResult" },
+      "description": "Details regarding structured response quality indices."
+    },
+    "hrRounds/{key}": {
+      "schema": { "$ref": "#/entities/HRRound" },
+      "description": "Scheduled HR rounds on flat keys (jobId_candidateUid)."
+    },
+    "hrRounds/{jobId}/uid/{candidateUid}": {
+      "schema": { "$ref": "#/entities/HRRound" },
+      "description": "Alternate subcollection schedule indexing by job and candidate."
+    },
+    "hrRounds/{jobId}/scheduled/{candidateUid}": {
+      "schema": { "$ref": "#/entities/HRRound" },
+      "description": "Second alternate subcollection path."
+    }
+  }
+}
